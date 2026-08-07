@@ -1,0 +1,12 @@
+{
+  "name": "pause-tests",
+  "private": true,
+  "type": "module",
+  "description": "Tests automatisés (jsdom) pour l'extension PAUSE.",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
