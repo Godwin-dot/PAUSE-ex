@@ -4,7 +4,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SUITES = ["stats.test.mjs", "clean-it.test.mjs", "one-second.test.mjs", "popup.test.mjs"];
+const SUITES = ["stats.test.mjs", "clean-it.test.mjs", "one-second.test.mjs", "dont-touch.test.mjs", "popup.test.mjs"];
 
 const results = [];
 for (const suite of SUITES) {

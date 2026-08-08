@@ -40,7 +40,7 @@ h.window.localStorage.clear();
 console.log("=== Accueil : en-tête PAUSE + carte(s) (registre) ===");
 assert(text(".topbar__name") === "PAUSE", "en-tête : marque PAUSE affichée");
 assert(count('.topbar [data-goto="stats"]') === 1, "bouton statistiques présent dans l'en-tête");
-assert(count(".game-card") === 2, "2 cartes de jeu (une par jeu du registre)");
+assert(count(".game-card") === 3, "3 cartes de jeu (une par jeu du registre)");
 ok("accueil OK");
 
 console.log("=== Cartes : emoji, titre, description, JOUER, état vide ===");
@@ -50,7 +50,7 @@ assert(first.querySelector(".game-card__desc"), "carte : description");
 assert(first.querySelector(".game-card__emoji"), "carte : emoji");
 const cta = first.querySelector(".game-card__cta");
 assert(cta && /JOUER/.test(cta.textContent), "carte : bouton JOUER");
-assert(count(".game-card__empty") === 2, "sans partie jouée : état vide 'Pas encore de record'");
+assert(count(".game-card__empty") === 3, "sans partie jouée : état vide 'Pas encore de record'");
 assert(count(".game-card__perf") === 0, "sans partie jouée : pas de performance affichée");
 ok("cartes OK");
 
@@ -71,8 +71,8 @@ ok("navigation Clean It + retour OK");
 console.log("=== Statistiques : blocs par jeu + états vides + retour ===");
 app.querySelector('.topbar [data-goto="stats"]').click();
 assert(app.querySelector(".page-head__title") !== null, "vue Statistiques affichée");
-assert(count(".stats__game") === 2, "un bloc par jeu du registre");
-assert(count(".stats__empty") === 2, "2 blocs vides (aucune partie jouée)");
+assert(count(".stats__game") === 3, "un bloc par jeu du registre");
+assert(count(".stats__empty") === 3, "3 blocs vides (aucune partie jouée)");
 assert(app.querySelector('.stats__reset[data-action="reset"]') !== null, "bouton RÉINITIALISER conservé");
 goBack();
 assert(app.querySelector(".home") !== null, "retour accueil depuis les stats");
@@ -82,7 +82,7 @@ console.log("=== Persistance : records lus sur les cartes ===");
 statsNs.recordGameResult("one-second", { score: 10, bestAccuracy: 0.2, bestCombo: 3 });
 statsNs.recordGameResult("clean-it", { score: 42, bestTime: 1.5, bestCombo: 5 });
 const popup2 = await h.reloadFresh("popup/popup.js");
-assert(count(".game-card__empty") === 0, "plus aucun état vide après des parties");
+assert(count(".game-card__empty") === 1, "1 état vide restant (Don't Touch, sans stats)");
 const osPerf = text('.game-card[data-game="one-second"] .game-card__perf');
 assert(osPerf && /10 pts/.test(osPerf), "One Second : meilleur score affiché sur la carte");
 const ciPerf = text('.game-card[data-game="clean-it"] .game-card__perf');
@@ -94,7 +94,7 @@ app.querySelector('.topbar [data-goto="stats"]').click();
 const labels = [...app.querySelectorAll(".stats__game .stat__label")].map((n) => n.textContent);
 assert(labels.some((l) => l === "Meilleur temps"), "Clean It : métrique 'Meilleur temps'");
 assert(labels.some((l) => l === "Meilleure précision"), "One Second : métrique 'Meilleure précision'");
-assert(count(".stats__empty") === 0, "plus de bloc vide après des parties");
+assert(count(".stats__empty") === 1, "1 bloc vide restant (Don't Touch, sans stats)");
 goBack();
 
 console.log("=== Réinitialisation : confirmation, annuler puis confirmer ===");
@@ -107,7 +107,7 @@ assert(statsNs.getGameStats("one-second").gamesPlayed === 1, "annuler ne détrui
 app.querySelector('.stats__reset[data-action="reset"]').click();
 app.querySelector('.stats-confirm [data-action="confirm"]').click();
 assert(statsNs.getGameStats("one-second").gamesPlayed === 0, "confirmer efface les stats");
-assert(count(".stats__empty") === 2, "après reset : états vides de retour");
+assert(count(".stats__empty") === 3, "après reset : états vides de retour");
 ok("réinitialisation OK");
 
 if (h.errors.length) {

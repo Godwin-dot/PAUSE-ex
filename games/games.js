@@ -8,8 +8,9 @@
 
 import { game as oneSecond } from "./one-second/oneSecond.js";
 import { game as cleanIt } from "./clean-it/cleanIt.js";
+import { game as donTouch } from "./don-touch/dontTouch.js";
 
-export const GAMES = [oneSecond, cleanIt];
+export const GAMES = [oneSecond, cleanIt, donTouch];
 
 /**
  * Retrouve un jeu par son identifiant.

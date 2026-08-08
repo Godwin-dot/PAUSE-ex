@@ -428,6 +428,187 @@ body {
   flex: 1;
 }
 
+.game-view__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-view__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Don't Touch ---------- */
+
+.dt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.dt__label {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.dt__hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+  max-width: 260px;
+}
+
+.dt__btn {
+  min-width: 180px;
+}
+
+.dt__bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.dt__time {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.dt__play {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8), transparent 70%),
+    var(--bg-card);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.dt__start {
+  position: absolute;
+  border-radius: 10px;
+  background: rgba(91, 191, 106, 0.3);
+  border: 2px solid rgba(70, 160, 84, 0.85);
+}
+
+.dt__target {
+  position: absolute;
+  border-radius: 10px;
+  background: rgba(94, 166, 214, 0.3);
+  border: 2px solid rgba(60, 130, 190, 0.85);
+}
+
+.dt__obs {
+  position: absolute;
+  background: var(--ink);
+  border-radius: 6px;
+  opacity: 0.85;
+}
+
+.dt__dot {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 34%, #fff1e2, transparent 45%),
+    var(--accent);
+  border: 2px solid #fff9f1;
+  box-shadow: 0 0 0 5px rgba(224, 120, 76, 0.12),
+    0 2px 8px rgba(120, 90, 60, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* État armé : le point est maintenant vulnérable (contour vert subtil). */
+.dt__dot.dt--armed {
+  border-color: #5bbf6a;
+  box-shadow: 0 0 0 5px rgba(91, 191, 106, 0.16),
+    0 0 10px rgba(91, 191, 106, 0.45), 0 2px 8px rgba(120, 90, 60, 0.3);
+}
+
+/* Proximité d'un obstacle : halo d'alerte (changement non réduit à la couleur). */
+.dt__dot.dt--prox {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 6px rgba(192, 69, 58, 0.16),
+    0 0 14px rgba(192, 69, 58, 0.55), 0 2px 8px rgba(120, 90, 60, 0.3);
+}
+
+/* Feedback d'impact / de réussite (💥 ✨) */
+.dt__boom {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: 30px;
+  z-index: 4;
+  animation: pop 0.25s ease both;
+}
+
+/* Résultats Don't Touch */
+.dt-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  animation: pop 0.35s ease both;
+}
+
+.dt-result__title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.dt-result--success .dt-result__title {
+  color: #3a9e54;
+}
+
+.dt-result--failed .dt-result__title {
+  color: var(--danger);
+}
+
+.dt-result__sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.dt-result__label {
+  margin-top: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+}
+
+.dt-result__time {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- One Second ---------- */
 
 .os {
