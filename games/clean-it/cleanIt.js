@@ -23,6 +23,7 @@
    ========================================================= */
 
 import { getGameStats, recordGameResult } from "../../storage/stats.js";
+import { formatSeconds } from "../shared/ui.js";
 
 /* --- Constantes ajustables --- */
 const BASE_PARTICLE_COUNT = 30;
@@ -33,7 +34,8 @@ const MIN_GAP = 40; // distance minimale entre deux particules
 const COMBO_WINDOW_MS = 500; // délai max entre deux nettoyages pour combo
 const COMBO_BONUS_PER_STEP = 15; // bonus par marche de combo
 const TIME_BONUS_FLOOR_SECONDS = 50; // au-delà, plus de bonus de temps
-const TIME_BONUS_PER_SECOND = 40; // points gagnés par seconde gagnée
+const TIME_BONUS_PER_SECOND = 10; // points par seconde gagnée (plafonné ci-dessous)
+const TIME_BONUS_MAX = 250; // plafond : le bonus vitesse ne domine plus le score
 const MAX_FLOATERS = 8; // max de micro-feedbacks simultanés
 
 /* Trois types de particules : différences surtout visuelles. */
@@ -65,29 +67,47 @@ function typeInfo(key) {
 /**
  * Génère `count` particules éloignées les unes des autres, dans la zone.
  * Chaque particule reçoit un type (valeur + taille + classe CSS).
+ * Grille spatiale de côté MIN_GAP : le test de proximité est O(1) par
+ * candidate (4 cellules voisines) au lieu d'un parcours complet O(n).
  */
 function spawnParticles(width, height, count) {
   const particles = [];
+  const grid = new Map(); // "col,ligne" -> index des particules de la cellule
+  const cellAt = (cx, cy) => `${cx},${cy}`;
   let attempts = 0;
   while (particles.length < count && attempts < count * 60) {
     attempts += 1;
     const x = rand(EDGE_MARGIN, width - EDGE_MARGIN);
     const y = rand(EDGE_MARGIN, height - EDGE_MARGIN);
-    const tooClose = particles.some((p) => Math.hypot(p.x - x, p.y - y) < MIN_GAP);
+    const cx = Math.floor(x / MIN_GAP);
+    const cy = Math.floor(y / MIN_GAP);
+    let tooClose = false;
+    for (let ox = -1; ox <= 1 && !tooClose; ox += 1) {
+      for (let oy = -1; oy <= 1 && !tooClose; oy += 1) {
+        const bucket = grid.get(cellAt(cx + ox, cy + oy));
+        if (!bucket) continue;
+        for (const i of bucket) {
+          const p = particles[i];
+          if (Math.hypot(p.x - x, p.y - y) < MIN_GAP) {
+            tooClose = true;
+            break;
+          }
+        }
+      }
+    }
     if (tooClose) continue;
     const key = pickType();
     const info = typeInfo(key);
     const r = rand(info.rMin, info.rMax);
+    const cell = cellAt(cx, cy);
+    if (!grid.has(cell)) grid.set(cell, []);
+    grid.get(cell).push(particles.length);
     particles.push({
       x, y, r, value: info.value, cls: info.cls, key,
       active: true, hitR: r + 8, el: null,
     });
   }
   return particles;
-}
-
-function formatSeconds(value) {
-  return `${value.toFixed(2)} s`;
 }
 
 /** Nombre de particules pour la prochaine partie (difficulté progressive). */
@@ -175,11 +195,14 @@ export const game = {
 
     /* ---------- Score ---------- */
 
-    /** Bonus de temps (plancher à 0). */
+    /** Bonus de temps (plancher à 0, plafonné pour ne pas dominer le score). */
     function timeBonus(elapsedSeconds) {
-      return Math.max(
-        0,
-        Math.round((TIME_BONUS_FLOOR_SECONDS - elapsedSeconds) * TIME_BONUS_PER_SECOND)
+      return Math.min(
+        TIME_BONUS_MAX,
+        Math.max(
+          0,
+          Math.round((TIME_BONUS_FLOOR_SECONDS - elapsedSeconds) * TIME_BONUS_PER_SECOND)
+        )
       );
     }
 

@@ -28,6 +28,7 @@
    ========================================================= */
 
 import { recordGameResult } from "../../storage/stats.js";
+import { formatSeconds, clamp } from "../shared/ui.js";
 
 const ROUNDS_PER_SESSION = 5;
 const COMBO_BONUS_STEP = 10;
@@ -54,18 +55,9 @@ const DIFFICULTY = [
   [3, 5, 7, 10, 10, 10], // manche 5 : chance de cible longue (plus exigeante)
 ];
 
-/** Formate une durée en secondes pour l'affichage. */
-function formatSeconds(value) {
-  return `${value.toFixed(2)} s`;
-}
-
 /** Niveau atteint selon la différence absolue. */
 function evaluate(diff) {
   return LEVELS.find((level) => diff <= level.maxDiff) ?? MISS;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
 }
 
 /** Cible pondérée selon la manche, sans répéter immédiatement la précédente. */

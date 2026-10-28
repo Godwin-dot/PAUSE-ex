@@ -609,6 +609,16 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.dt-result__score {
+  font-size: 26px;
+}
+
+.dt-result__record-time {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
 /* ---------- One Second ---------- */
 
 .os {

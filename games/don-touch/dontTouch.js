@@ -10,6 +10,13 @@
      success -> ✨ RÉUSSI ! (temps affiché)
      failed  -> 💥 TOUCHÉ ! (écran d'échec)
 
+   Étape 10 — intégration au système de records :
+     - chaque réussite est enregistrée via recordGameResult
+       (score dérivé du temps + gamesPlayed + 1) ;
+     - écran de succès enrichi : « 🏆 Nouveau record ! », meilleur
+       temps en mémoire, parties jouées ;
+     - les échecs ne produisent AUCUNE écriture dans le storage.
+
    Étape 9 — refonte du contrôle souris :
      - coordonnées converties via getBoundingClientRect() ;
      - une position LOGIQUE (le curseur) et une position VISUELLE
@@ -22,6 +29,9 @@
        OUPS, étincelle ✨ puis RÉUSSI ; un seul balayage rAF.
    ========================================================= */
 
+import { recordGameResult } from "../../storage/stats.js";
+import { formatSeconds, clamp } from "../shared/ui.js";
+
 /* --- Paramètres réglables (le + central : la sensation souris) --- */
 export const PLAYER_RADIUS = 8; // rayon du cœur visuel du point (px)
 export const COLLISION_TOLERANCE = 2; // marge de pardon (px), rend la collision juste
@@ -30,6 +40,17 @@ export const SNAP_THRESHOLD = 0.4; // sous ce delta, on colle au curseur (anti-t
 export const PROXIMITY_MARGIN = 24; // distance (px) d'alerte de proximité d'un obstacle
 export const BOOM_DELAY = 150; // feedback 💥 avant l'écran (ms)
 export const SPARKLE_DELAY = 120; // feedback ✨ avant l'écran (ms)
+
+/* --- Scoring d'une réussite (dérivé du temps, cohérent avec Clean It) --- */
+const SCORE_BASE = 200; // socle garanti à chaque réussite
+const SCORE_FLOOR_SECONDS = 40; // au-delà, plus de bonus vitesse
+const SCORE_PER_SECOND = 5; // points par seconde gagnée sous le plancher
+
+/** Score d'une partie réussie : socle + bonus vitesse (plancher à 0). */
+export function scoreForTime(seconds) {
+  const speedBonus = Math.max(0, Math.round((SCORE_FLOOR_SECONDS - seconds) * SCORE_PER_SECOND));
+  return SCORE_BASE + speedBonus;
+}
 
 /* Obstacles en coordonnées normalisées (x,y,w,h en % de la zone).
    Configurations dessinées à la main, garanties solvables. */
@@ -73,17 +94,9 @@ function pickLayout(previousId) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function formatSeconds(value) {
-  return `${value.toFixed(2)} s`;
-}
-
 /** Convertit une coordonnée normalisée (%) en pixels dans la zone. */
 function toPx(value, span) {
   return (value / 100) * span;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
 }
 
 /** Le point `cx,cy` de rayon `r` touche-t-il le rectangle `rect` ?
@@ -96,6 +109,13 @@ function circleHitsRect(cx, cy, r, rect) {
   return dx * dx + dy * dy < r * r;
 }
 
+/* Contrat d'un objet `game` (commun aux trois jeux) :
+   { id, emoji, title, description, mount(container) }
+   - `mount` doit rendre l'écran READY et installer un écouteur "click"
+     délégué via [data-action] ;
+   - `mount` doit appeler son propre `<id>Unbind()` s'il existe encore
+     (fermeture/réouverture du popup sans démontage natif) ;
+   - `<id>Unbind` annule rAF, timers, listeners et DOM temporaire. */
 export const game = {
   id: "don-touch",
   emoji: "🚫",
@@ -123,6 +143,7 @@ export const game = {
       zone: null,
       onPointer: null,
       onPointerLeave: null,
+      sessionSummary: null, // résumé des records après une réussite
     };
 
     /* ---------- Actions ---------- */
@@ -135,11 +156,13 @@ export const game = {
       clearTimers();
       clearBooms();
       state.layout = pickLayout(state.layout?.id);
+      state.sessionSummary = null;
       state.startTime = performance.now();
       renderPlaying();
     }
 
     function back() {
+      // Nettoyage systématique quelle que soit la phase (comme Clean It).
       dispose();
       container.dispatchEvent(new CustomEvent("back"));
     }
@@ -171,6 +194,11 @@ export const game = {
       state.ended = true;
       const seconds = (performance.now() - state.startTime) / 1000;
       stopLoop();
+      // Seules les réussites sont enregistrées (les échecs n'écrivent rien).
+      state.sessionSummary = recordGameResult(game.id, {
+        score: scoreForTime(seconds),
+        bestTime: seconds,
+      });
       spawnBoom("✨", state.visual.x, state.visual.y);
       schedule(SPARKLE_DELAY, () => {
         state.phase = "success";
@@ -442,6 +470,20 @@ export const game = {
         : "Tu as touché un obstacle.";
       const action = isSuccess ? "REJOUER" : "REESSAYER";
 
+      const summary = state.sessionSummary;
+      const recordLine =
+        isSuccess && summary?.newRecord
+          ? `<p class="os-record">🏆 Nouveau record !</p>`
+          : "";
+      const scoreLine = isSuccess
+        ? `<p class="dt-result__label">Score</p>
+           <p class="dt-result__time dt-result__score">${scoreForTime(seconds)}</p>`
+        : "";
+      const bestLine =
+        isSuccess && summary?.bestTime != null
+          ? `<p class="dt-result__record-time">⚡ Meilleur temps : ${formatSeconds(summary.bestTime)} · ${summary.gamesPlayed} partie${summary.gamesPlayed > 1 ? "s" : ""}</p>`
+          : "";
+
       container.innerHTML = `
         <div class="game-view fade-in">
           ${head()}
@@ -450,6 +492,9 @@ export const game = {
             ${sub ? `<p class="dt-result__sub">${sub}</p>` : ""}
             ${isSuccess ? `<p class="dt-result__label">Temps</p>` : ""}
             ${isSuccess ? `<p class="dt-result__time">${formatSeconds(seconds)}</p>` : ""}
+            ${recordLine}
+            ${scoreLine}
+            ${bestLine}
             <div class="os-end__actions">
               <button class="btn btn--primary os__btn" data-action="restart">${action}</button>
               <button class="btn btn--ghost os__btn" data-action="back">ACCUEIL</button>

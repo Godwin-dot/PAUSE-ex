@@ -23,10 +23,11 @@ function assert(cond, m) {
 /* formules du jeu dupliquées pour les attentes */
 const COMBO_BONUS_PER_STEP = 15;
 const TIME_BONUS_FLOOR = 50;
-const TIME_BONUS_PER_SEC = 40;
+const TIME_BONUS_PER_SEC = 10;
+const TIME_BONUS_MAX = 250; // plafond du bonus vitesse
 const MAX_FLOATERS = 8;
 function timeBonus(seconds) {
-  return Math.max(0, Math.round((TIME_BONUS_FLOOR - seconds) * TIME_BONUS_PER_SEC));
+  return Math.min(TIME_BONUS_MAX, Math.max(0, Math.round((TIME_BONUS_FLOOR - seconds) * TIME_BONUS_PER_SEC)));
 }
 
 const statsNs = await h.loadModule("storage/stats.js");
