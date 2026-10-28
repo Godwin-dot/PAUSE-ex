@@ -8,6 +8,19 @@
    RÈGLE : les classes de jeu (`.os*`, `.ci*`) correspondent
    aux écrans de jeu eux-mêmes ; on ne touche pas à leur
    logique de présentation fonctionnelle ici.
+
+   CLASSES DYNAMIQUES (composées en JS via template literals,
+   introuvables par un grep simple — index maintenu à la main) :
+     .dt-result--success | --failed   <- dontTouch.js renderResult(kind)
+     .ci__pop--combo                  <- cleanIt.js spawnFloater(kind)
+                                         (les autres floateurs retombent
+                                         sur la classe de base .ci__pop)
+     .os-result--perfect | --excellent | --good | --close | --miss
+                                      <- oneSecond.js (verdict de manche)
+     .os-combo--lost                  <- oneSecond.js (combo rompu)
+     .ci__dot--petite | --grande | --gone
+     .ci__play--near | .ci-end__value--sm
+   Préfixes : os = One Second, ci = Clean It, dt = Don't Touch.
    ========================================================= */
 
 :root {

@@ -98,7 +98,9 @@ export function createHarness() {
       }
       for (const nm of m[1].split(",").map((s) => s.trim()).filter(Boolean)) {
         const parts = nm.split(/\s+/);
-        deps[parts.includes("as") ? parts[parts.length - 1] : parts[0]] = depNs[parts[0]];
+        const sourceName = parts[0];
+        const localName = parts.includes("as") ? parts[parts.length - 1] : sourceName;
+        deps[localName] = depNs[sourceName];
       }
     }
 
@@ -109,6 +111,10 @@ export function createHarness() {
       .replace(re, "")
       .replace(/export\s+function\s+/g, "function ")
       .replace(/export\s+const\s+/g, "const ");
+    /* `export { a, b };` (ligne seule, ex. ré-exports depuis balance.js) :
+       la syntaxe est retirée du corps ; les noms sont déjà déclarés par le
+       `export const` transformé ci-dessus et collectés dans `exported`. */
+    body = body.replace(/export\s*\{[^}]*\};?/g, "");
     const exported = [
       ...[...src.matchAll(/export\s+function\s+(\w+)/g)].map((x) => x[1]),
       ...[...src.matchAll(/export\s+const\s+(\w+)/g)].map((x) => x[1]),

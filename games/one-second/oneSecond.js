@@ -29,10 +29,12 @@
 
 import { recordGameResult } from "../../storage/stats.js";
 import { formatSeconds, clamp, bindActions } from "../shared/ui.js";
+import {
+  OS_ROUNDS_PER_SESSION as ROUNDS_PER_SESSION,
+  OS_COMBO_BONUS_STEP as COMBO_BONUS_STEP,
+  OS_COMBO_BONUS_MAX as COMBO_BONUS_MAX,
+} from "../balance.js";
 
-const ROUNDS_PER_SESSION = 5;
-const COMBO_BONUS_STEP = 10;
-const COMBO_BONUS_MAX = 50; // plafonné à +50 (combo >= 6)
 const GAUGE_WINDOW = 0.5; // fenêtre affichée autour de la cible (secondes)
 
 const LEVELS = [

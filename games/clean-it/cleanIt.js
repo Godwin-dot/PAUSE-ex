@@ -24,18 +24,20 @@
 
 import { getGameStats, recordGameResult } from "../../storage/stats.js";
 import { formatSeconds, bindActions } from "../shared/ui.js";
+import {
+  CI_BASE_PARTICLE_COUNT as BASE_PARTICLE_COUNT,
+  CI_MAX_PARTICLE_COUNT as MAX_PARTICLE_COUNT,
+  CI_PARTICLES_PER_GAME as PARTICLES_PER_GAME,
+  CI_COMBO_WINDOW_MS as COMBO_WINDOW_MS,
+  CI_COMBO_BONUS_PER_STEP as COMBO_BONUS_PER_STEP,
+  CI_TIME_BONUS_FLOOR_SECONDS as TIME_BONUS_FLOOR_SECONDS,
+  CI_TIME_BONUS_PER_SECOND as TIME_BONUS_PER_SECOND,
+  CI_TIME_BONUS_MAX as TIME_BONUS_MAX,
+} from "../balance.js";
 
-/* --- Constantes ajustables --- */
-const BASE_PARTICLE_COUNT = 30;
-const MAX_PARTICLE_COUNT = 45;
-const PARTICLES_PER_GAME = 2; // +2 particules à chaque partie jouée
+/* --- Constantes techniques (non liées à l'équilibrage) --- */
 const EDGE_MARGIN = 18; // garde la particule hors des bords de la zone
 const MIN_GAP = 40; // distance minimale entre deux particules
-const COMBO_WINDOW_MS = 500; // délai max entre deux nettoyages pour combo
-const COMBO_BONUS_PER_STEP = 15; // bonus par marche de combo
-const TIME_BONUS_FLOOR_SECONDS = 50; // au-delà, plus de bonus de temps
-const TIME_BONUS_PER_SECOND = 10; // points par seconde gagnée (plafonné ci-dessous)
-const TIME_BONUS_MAX = 250; // plafond : le bonus vitesse ne domine plus le score
 const MAX_FLOATERS = 8; // max de micro-feedbacks simultanés
 
 /* Trois types de particules : différences surtout visuelles. */

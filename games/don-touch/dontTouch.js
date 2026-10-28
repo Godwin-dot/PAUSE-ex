@@ -33,18 +33,24 @@ import { recordGameResult } from "../../storage/stats.js";
 import { formatSeconds, clamp, bindActions } from "../shared/ui.js";
 
 /* --- Paramètres réglables (le + central : la sensation souris) --- */
+import {
+  DT_COLLISION_TOLERANCE as COLLISION_TOLERANCE,
+  DT_SMOOTHING as SMOOTHING,
+  DT_SCORE_BASE as SCORE_BASE,
+  DT_SCORE_FLOOR_SECONDS as SCORE_FLOOR_SECONDS,
+  DT_SCORE_PER_SECOND as SCORE_PER_SECOND,
+} from "../balance.js";
+
 export const PLAYER_RADIUS = 8; // rayon du cœur visuel du point (px)
-export const COLLISION_TOLERANCE = 2; // marge de pardon (px), rend la collision juste
-export const SMOOTHING = 0.88; // interpolation : plus haut = moins de latence
+export const COLLISION_TOLERANCE = DT_COLLISION_TOLERANCE; // marge de pardon (px), rend la collision juste
+export const SMOOTHING = DT_SMOOTHING; // interpolation curseur (ré-exportée pour les tests)
 export const SNAP_THRESHOLD = 0.4; // sous ce delta, on colle au curseur (anti-tremblement)
 export const PROXIMITY_MARGIN = 24; // distance (px) d'alerte de proximité d'un obstacle
 export const BOOM_DELAY = 150; // feedback 💥 avant l'écran (ms)
 export const SPARKLE_DELAY = 120; // feedback ✨ avant l'écran (ms)
 
 /* --- Scoring d'une réussite (dérivé du temps, cohérent avec Clean It) --- */
-const SCORE_BASE = 200; // socle garanti à chaque réussite
-const SCORE_FLOOR_SECONDS = 40; // au-delà, plus de bonus vitesse
-const SCORE_PER_SECOND = 5; // points par seconde gagnée sous le plancher
+// SCORE_BASE / SCORE_FLOOR_SECONDS / SCORE_PER_SECOND viennent de games/balance.js
 
 /** Score d'une partie réussie : socle + bonus vitesse (plancher à 0). */
 export function scoreForTime(seconds) {
