@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PAUSE",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "minimum_chrome_version": "116",
   "description": "Prends une petite pause avec de petits jeux simples et relaxants.",
   "action": {
     "default_popup": "popup/popup.html",

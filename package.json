@@ -1,0 +1,12 @@
+{
+  "name": "pause-extension",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Extension Chrome MV3 : popup de pause avec mini-jeux relaxants (One Second, Clean It, Don't Touch).",
+  "scripts": {
+    "test": "npm --prefix tests test",
+    "posttest": "echo \"✔ Tests OK — penser à synchroniser manifest.json:version et CHANGELOG.md avant release\""
+  },
+  "keywords": ["chrome-extension", "manifest-v3", "games", "relax"],
+  "license": "MIT"
+}

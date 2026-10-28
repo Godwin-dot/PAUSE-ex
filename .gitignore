@@ -1,1 +1,25 @@
+# Dépendances
 node_modules/
+
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs / IDE
+.vscode/
+.idea/
+*.swp
+
+# Artefacts de build & logs
+dist/
+build/
+*.zip
+*.crx
+*.pem
+*.log
+npm-debug.log*
+
+# Environnement local
+.env
+.env.*
