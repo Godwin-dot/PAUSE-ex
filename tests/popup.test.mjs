@@ -81,8 +81,11 @@ ok("Statistiques + retour OK");
 console.log("=== Persistance : records lus sur les cartes ===");
 statsNs.recordGameResult("one-second", { score: 10, bestAccuracy: 0.2, bestCombo: 3 });
 statsNs.recordGameResult("clean-it", { score: 42, bestTime: 1.5, bestCombo: 5 });
+statsNs.recordGameResult("don-touch", { score: 360, bestTime: 8 });
 const popup2 = await h.reloadFresh("popup/popup.js");
-assert(count(".game-card__empty") === 1, "1 état vide restant (Don't Touch, sans stats)");
+assert(count(".game-card__empty") === 0, "plus aucun état vide : les 3 jeux ont des records");
+const dtPerf = text('.game-card[data-game="don-touch"] .game-card__perf');
+assert(dtPerf && /360 pts/.test(dtPerf) && /⚡/.test(dtPerf), "Don't Touch : score + meilleur temps sur la carte");
 const osPerf = text('.game-card[data-game="one-second"] .game-card__perf');
 assert(osPerf && /10 pts/.test(osPerf), "One Second : meilleur score affiché sur la carte");
 const ciPerf = text('.game-card[data-game="clean-it"] .game-card__perf');
@@ -94,7 +97,10 @@ app.querySelector('.topbar [data-goto="stats"]').click();
 const labels = [...app.querySelectorAll(".stats__game .stat__label")].map((n) => n.textContent);
 assert(labels.some((l) => l === "Meilleur temps"), "Clean It : métrique 'Meilleur temps'");
 assert(labels.some((l) => l === "Meilleure précision"), "One Second : métrique 'Meilleure précision'");
-assert(count(".stats__empty") === 1, "1 bloc vide restant (Don't Touch, sans stats)");
+assert(count(".stats__empty") === 0, "3 blocs remplis : Don't Touch est intégré aux stats");
+const dtRows = [...app.querySelectorAll('.stats__game')]
+  .find((n) => /Don't Touch/.test(n.textContent));
+assert(dtRows && /Meilleur temps/.test(dtRows.textContent), "Don't Touch : bloc 'Meilleur temps' affiché");
 goBack();
 
 console.log("=== Réinitialisation : confirmation, annuler puis confirmer ===");

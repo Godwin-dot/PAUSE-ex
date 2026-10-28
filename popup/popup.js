@@ -14,11 +14,13 @@
 
 import { GAMES } from "../games/games.js";
 import { getGameStats, resetAll } from "../storage/stats.js";
+import { escapeHtml, formatSeconds } from "../games/shared/ui.js";
 
 const app = document.querySelector("#app");
 
+/** Durée lisible ou tiret long si absente. */
 function fmtDuration(value) {
-  return value === null || value === undefined ? "—" : `${value.toFixed(2)} s`;
+  return value === null || value === undefined ? "—" : formatSeconds(value);
 }
 
 function comboLabel(value) {
@@ -40,7 +42,7 @@ function durationField(stats) {
 }
 
 /** Lignes de statistiques propres à chaque jeu, selon ses champs. */
-function gameMetrics(game, stats) {
+function gameMetrics(stats) {
   const duration = durationField(stats);
   const durationLabel =
     duration === "time"
@@ -91,12 +93,12 @@ function cardHtml(game) {
   const stats = getGameStats(game.id);
   const played = stats.gamesPlayed > 0;
   return `
-    <article class="game-card" data-game="${game.id}">
+    <article class="game-card" data-game="${escapeHtml(game.id)}">
       <div class="game-card__head">
-        <span class="game-card__emoji" aria-hidden="true">${game.emoji}</span>
+        <span class="game-card__emoji" aria-hidden="true">${escapeHtml(game.emoji)}</span>
         <div class="game-card__info">
-          <h3 class="game-card__title">${game.title}</h3>
-          <p class="game-card__desc">${game.description}</p>
+          <h3 class="game-card__title">${escapeHtml(game.title)}</h3>
+          <p class="game-card__desc">${escapeHtml(game.description)}</p>
         </div>
       </div>
       ${
@@ -104,7 +106,7 @@ function cardHtml(game) {
           ? `<span class="game-card__perf">🏆 ${bestPerf(game, stats)}</span>`
           : '<span class="game-card__empty">Pas encore de record — lance une partie !</span>'
       }
-      <button class="btn btn--primary game-card__cta" data-game="${game.id}">JOUER</button>
+      <button class="btn btn--primary game-card__cta" data-game="${escapeHtml(game.id)}">JOUER</button>
     </article>
   `;
 }
@@ -145,15 +147,19 @@ function renderHome() {
 
 /* ---------- Mini-jeu ---------- */
 
+/** Vue actuellement montée, pour son cycle de vie (P12). */
+let activeGame = null;
+
 function renderGame(game) {
   enterView(() => game.mount(app));
+  activeGame = game;
 }
 
 /* ---------- Statistiques ---------- */
 
 function statsBlock(game) {
   const stats = getGameStats(game.id);
-  const rows = gameMetrics(game, stats)
+  const rows = gameMetrics(stats)
     .map(
       ([label, value]) => `
         <div class="stat">
@@ -168,7 +174,7 @@ function statsBlock(game) {
       : "";
   return `
     <article class="stats__game">
-      <h3 class="stats__game-title"><span aria-hidden="true">${game.emoji}</span> ${game.title}</h3>
+      <h3 class="stats__game-title"><span aria-hidden="true">${escapeHtml(game.emoji)}</span> ${escapeHtml(game.title)}</h3>
       <div class="stats__grid">${rows}${empty}</div>
     </article>
   `;
@@ -228,3 +234,12 @@ function renderStatsConfirm() {
 /* ---------- Démarrage ---------- */
 
 renderHome();
+
+/* Cycle de vie du popup (P12) : à la fermeture, le navigateur libère tout ;
+   ce handler est un filet explicite pour les futurs contextes persistants
+   (page entière, web app) où window 'pagehide' serait le seul signal. */
+window.addEventListener("pagehide", () => {
+  if (activeGame && app[`__${activeGame.id.slice(0, 2)}Unbind`]) {
+    app[`__${activeGame.id.slice(0, 2)}Unbind`]();
+  }
+});

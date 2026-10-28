@@ -24,8 +24,30 @@ function near(a, b, eps = 0.5) {
   return Math.abs(a - b) <= eps;
 }
 
+const statsNs = await h.loadModule("storage/stats.js");
 const mod = await h.loadModule("games/don-touch/dontTouch.js");
-const { game, PLAYER_RADIUS, COLLISION_TOLERANCE } = mod;
+const { game, PLAYER_RADIUS, COLLISION_TOLERANCE, scoreForTime } = mod;
+
+/* formule dupliquée pour les attentes (socle + bonus vitesse plafonné) */
+const SCORE_BASE = 200;
+const SCORE_FLOOR_S = 40;
+const SCORE_PER_S = 5;
+function expectedScore(seconds) {
+  return SCORE_BASE + Math.max(0, Math.round((SCORE_FLOOR_S - seconds) * SCORE_PER_S));
+}
+function dtStats() {
+  return statsNs.getGameStats("don-touch");
+}
+/** Termine une partie gagnante : armage puis cible, timers flushés. */
+function winRun(msElapsed) {
+  play();
+  arm();
+  const tg = center(rectOf(host.querySelector(".dt__target")));
+  h.advance(msElapsed); // le chrono avance entre l'armement et la cible
+  moveTo(tg.x, tg.y);
+  h.flushTimers();
+  return msElapsed / 1000;
+}
 
 const host = document.createElement("div");
 app.appendChild(host);
@@ -177,6 +199,59 @@ assert(host.querySelector(".dt-result--success") !== null, "DOM stable après ra
 assert(h.errors.length === 0, "0 erreur JS");
 ok("succès + cleanup OK");
 
+console.log("=== Réussite : aucune écriture avant d'avoir atteint la cible ===");
+h.window.localStorage.clear();
+play();
+arm();
+moveTo(160, 160);
+h.flushFrames();
+assert(dtStats().gamesPlayed === 0, "en jeu : rien n'est encore enregistré");
+ok("pas d'enregistrement prématuré OK");
+
+console.log("=== Échec : aucune statistique enregistrée ===");
+play();
+arm();
+const obsF = pickOb();
+moveTo(obsF.x + obsF.w / 2, obsF.y + obsF.h / 2);
+h.flushTimers();
+assert(resultKind() === "failed", "écran FAILED");
+assert(dtStats().gamesPlayed === 0, "échec : gamesPlayed reste à 0");
+assert(dtStats().bestScore === 0 && dtStats().bestTime === null, "échec : aucun record écrit");
+ok("échec sans écriture OK");
+
+console.log("=== Réussite : records persistés (score + temps + gamesPlayed) ===");
+const secs1 = winRun(8000); // 8 s -> score = 200 + (40-8)*5 = 360
+assert(resultKind() === "success", "écran SUCCESS");
+assert(scoreForTime(secs1) === expectedScore(secs1), `scoreForTime(${secs1}) = ${expectedScore(secs1)}`);
+const st1 = dtStats();
+assert(st1.gamesPlayed === 1, "gamesPlayed = 1 après une réussite");
+assert(st1.bestScore === expectedScore(secs1), `bestScore = ${expectedScore(secs1)}`);
+assert(Math.abs(st1.bestTime - secs1) < 0.01, `bestTime = ${secs1}s`);
+const freshStats = await h.reloadFresh("storage/stats.js");
+const st1b = freshStats.getGameStats("don-touch");
+assert(st1b.gamesPlayed === 1 && st1b.bestScore === st1.bestScore, "records persistés après rechargement");
+ok("persistance des records Don't Touch OK");
+
+console.log("=== Écran de succès : feedback « Nouveau record ! » + meilleur temps ===");
+winRun(20000); // 20 s : moins bon temps, même socle+bonus différent
+const resEl = host.querySelector(".dt-result--success");
+assert(resEl !== null, "second succès rendu");
+assert(host.querySelector(".os-record") === null, "pas de 'Nouveau record' si rien n'est battu");
+assert(/Meilleur temps/.test(host.querySelector(".dt-result__record-time")?.textContent || ""),
+  "ligne 'Meilleur temps' affichée (temps conservé)");
+assert(dtStats().bestTime === secs1, "bestTime conservé (le plus petit gagne)");
+winRun(1000); // 1 s : nouveau record de temps ET de score
+assert(host.querySelector(".os-record") !== null, "'🏆 Nouveau record !' quand un record est battu");
+assert(dtStats().bestTime === 1, "bestTime mis à jour vers le plus rapide");
+assert(dtStats().gamesPlayed === 3, "gamesPlayed = 3 réussites");
+ok("feedback records OK");
+
+console.log("=== Scoring : bonus vitesse plafonné, socle garanti ===");
+assert(scoreForTime(0) === SCORE_BASE + SCORE_FLOOR_S * SCORE_PER_S, "score max = socle + bonus complet");
+assert(scoreForTime(60) === SCORE_BASE, "au-delà du plancher : socle seul");
+assert(scoreForTime(-5) === scoreForTime(0), "jamais au-dessus du plafond logique");
+ok("formule de score bornée OK");
+
 console.log("=== Navigation : retour propre ===");
 const dt2 = await h.reloadFresh("games/don-touch/dontTouch.js");
 const host2 = document.createElement("div");
@@ -194,5 +269,5 @@ if (h.errors.length) {
 } else {
   ok("0 erreur JavaScript");
 }
-console.log(`\nDon't Touch (refonte) : ${pass} assertions, ${fail} échecs`);
+console.log(`\nDon't Touch (refonte + records) : ${pass} assertions, ${fail} échecs`);
 process.exitCode = fail ? 1 : 0;

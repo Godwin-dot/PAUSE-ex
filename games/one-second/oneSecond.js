@@ -28,10 +28,13 @@
    ========================================================= */
 
 import { recordGameResult } from "../../storage/stats.js";
+import { formatSeconds, clamp, bindActions } from "../shared/ui.js";
+import {
+  OS_ROUNDS_PER_SESSION as ROUNDS_PER_SESSION,
+  OS_COMBO_BONUS_STEP as COMBO_BONUS_STEP,
+  OS_COMBO_BONUS_MAX as COMBO_BONUS_MAX,
+} from "../balance.js";
 
-const ROUNDS_PER_SESSION = 5;
-const COMBO_BONUS_STEP = 10;
-const COMBO_BONUS_MAX = 50; // plafonné à +50 (combo >= 6)
 const GAUGE_WINDOW = 0.5; // fenêtre affichée autour de la cible (secondes)
 
 const LEVELS = [
@@ -54,18 +57,9 @@ const DIFFICULTY = [
   [3, 5, 7, 10, 10, 10], // manche 5 : chance de cible longue (plus exigeante)
 ];
 
-/** Formate une durée en secondes pour l'affichage. */
-function formatSeconds(value) {
-  return `${value.toFixed(2)} s`;
-}
-
 /** Niveau atteint selon la différence absolue. */
 function evaluate(diff) {
   return LEVELS.find((level) => diff <= level.maxDiff) ?? MISS;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
 }
 
 /** Cible pondérée selon la manche, sans répéter immédiatement la précédente. */
@@ -336,24 +330,21 @@ export const game = {
       `;
     }
 
-    /* ---------- Liaison des actions ---------- */
+    /* ---------- Liaison des actions (délégation partagée) ---------- */
 
-    const clickHandler = (event) => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (!action) return;
+    const unbindActions = bindActions(container, (action) => {
       if (action === "back" || action === "home") return back();
       if (action === "start") return start();
       if (action === "stop") return stop();
       if (action === "next") return next();
       if (action === "replay") return restart();
-    };
+    });
 
     container.__osUnbind = () => {
       cancelAnimationFrame(state.rafId);
-      container.removeEventListener("click", clickHandler);
+      unbindActions();
       delete container.__osUnbind;
     };
-    container.addEventListener("click", clickHandler);
 
     renderReady();
   },
