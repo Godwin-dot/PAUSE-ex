@@ -23,7 +23,7 @@
    ========================================================= */
 
 import { getGameStats, recordGameResult } from "../../storage/stats.js";
-import { formatSeconds } from "../shared/ui.js";
+import { formatSeconds, bindActions } from "../shared/ui.js";
 
 /* --- Constantes ajustables --- */
 const BASE_PARTICLE_COUNT = 30;
@@ -447,21 +447,18 @@ export const game = {
       `;
     }
 
-    /* ---------- Liaison des actions ---------- */
+    /* ---------- Liaison des actions (délégation partagée) ---------- */
 
-    const clickHandler = (event) => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (!action) return;
+    const unbindActions = bindActions(container, (action) => {
       if (action === "back" || action === "home") return back();
       if (action === "start" || action === "replay") return startGame();
-    };
+    });
 
     container.__ciUnbind = () => {
       cleanup();
-      container.removeEventListener("click", clickHandler);
+      unbindActions();
       delete container.__ciUnbind;
     };
-    container.addEventListener("click", clickHandler);
 
     renderReady();
   },

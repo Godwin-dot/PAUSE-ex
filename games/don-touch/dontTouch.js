@@ -30,7 +30,7 @@
    ========================================================= */
 
 import { recordGameResult } from "../../storage/stats.js";
-import { formatSeconds, clamp } from "../shared/ui.js";
+import { formatSeconds, clamp, bindActions } from "../shared/ui.js";
 
 /* --- Paramètres réglables (le + central : la sensation souris) --- */
 export const PLAYER_RADIUS = 8; // rayon du cœur visuel du point (px)
@@ -48,7 +48,9 @@ const SCORE_PER_SECOND = 5; // points par seconde gagnée sous le plancher
 
 /** Score d'une partie réussie : socle + bonus vitesse (plancher à 0). */
 export function scoreForTime(seconds) {
-  const speedBonus = Math.max(0, Math.round((SCORE_FLOOR_SECONDS - seconds) * SCORE_PER_SECOND));
+  // clamp : un temps négatif (ou nul) ne doit JAMAIS dépasser le plafond de bonus
+  const s = clamp(Number.isFinite(seconds) ? seconds : SCORE_FLOOR_SECONDS, 0, SCORE_FLOOR_SECONDS);
+  const speedBonus = Math.round((SCORE_FLOOR_SECONDS - s) * SCORE_PER_SECOND);
   return SCORE_BASE + speedBonus;
 }
 
@@ -504,21 +506,18 @@ export const game = {
       `;
     }
 
-    /* ---------- Liaison des actions ---------- */
+    /* ---------- Liaison des actions (délégation partagée) ---------- */
 
-    const clickHandler = (event) => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (!action) return;
+    const unbindActions = bindActions(container, (action) => {
       if (action === "back") return back();
       if (action === "start" || action === "restart") return start();
-    };
+    });
 
     container.__dtUnbind = () => {
       dispose();
-      container.removeEventListener("click", clickHandler);
+      unbindActions();
       delete container.__dtUnbind;
     };
-    container.addEventListener("click", clickHandler);
 
     renderReady();
   },

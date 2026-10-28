@@ -147,8 +147,12 @@ function renderHome() {
 
 /* ---------- Mini-jeu ---------- */
 
+/** Vue actuellement montée, pour son cycle de vie (P12). */
+let activeGame = null;
+
 function renderGame(game) {
   enterView(() => game.mount(app));
+  activeGame = game;
 }
 
 /* ---------- Statistiques ---------- */
@@ -230,3 +234,12 @@ function renderStatsConfirm() {
 /* ---------- Démarrage ---------- */
 
 renderHome();
+
+/* Cycle de vie du popup (P12) : à la fermeture, le navigateur libère tout ;
+   ce handler est un filet explicite pour les futurs contextes persistants
+   (page entière, web app) où window 'pagehide' serait le seul signal. */
+window.addEventListener("pagehide", () => {
+  if (activeGame && app[`__${activeGame.id.slice(0, 2)}Unbind`]) {
+    app[`__${activeGame.id.slice(0, 2)}Unbind`]();
+  }
+});

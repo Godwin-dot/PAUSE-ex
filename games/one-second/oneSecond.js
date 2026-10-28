@@ -28,7 +28,7 @@
    ========================================================= */
 
 import { recordGameResult } from "../../storage/stats.js";
-import { formatSeconds, clamp } from "../shared/ui.js";
+import { formatSeconds, clamp, bindActions } from "../shared/ui.js";
 
 const ROUNDS_PER_SESSION = 5;
 const COMBO_BONUS_STEP = 10;
@@ -328,24 +328,21 @@ export const game = {
       `;
     }
 
-    /* ---------- Liaison des actions ---------- */
+    /* ---------- Liaison des actions (délégation partagée) ---------- */
 
-    const clickHandler = (event) => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (!action) return;
+    const unbindActions = bindActions(container, (action) => {
       if (action === "back" || action === "home") return back();
       if (action === "start") return start();
       if (action === "stop") return stop();
       if (action === "next") return next();
       if (action === "replay") return restart();
-    };
+    });
 
     container.__osUnbind = () => {
       cancelAnimationFrame(state.rafId);
-      container.removeEventListener("click", clickHandler);
+      unbindActions();
       delete container.__osUnbind;
     };
-    container.addEventListener("click", clickHandler);
 
     renderReady();
   },
